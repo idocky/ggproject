@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+    nginx:
+        image: nginx:latest
+        volumes:
+            - ./:/var/www
+            - ./_docker/nginx/conf.d:/etc/nginx/conf.d
+        ports:
+            - "8000:80"
+        depends_on:
+            - app
+        container_name: gg_nginx
+
+    app:
+        build:
+            context: .
+            dockerfile: _docker/app/Dockerfile
+        volumes:
+            - ./:/var/www
+        depends_on:
+            - postgres
+        container_name: gg_app
+
+    postgres:
+        image: postgres:latest
+        restart: always
+        ports:
+            - "10007:5432"
+        environment:
+            POSTGRES_PASSWORD: secret
+            POSTGRES_USER: default
+            POSTGRES_DB: default
+    postgres_test:
+        image: postgres:latest
+        restart: always
+        ports:
+            - "10008:5432"
+        environment:
+            POSTGRES_PASSWORD: secret
+            POSTGRES_USER: test_user
+            POSTGRES_DB: test_db
+    redis:
+        image: redis:latest
+        restart: always
+        volumes:
+            - ./storage/redis/data:/data
+        ports:
+            - "10004:6379"
