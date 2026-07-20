@@ -23,6 +23,7 @@ class PlayerFactory extends Factory
             'full_name' => fake()->name(),
             'country' => fake()->country(),
             'team_id' => Team::factory(),
+            'grid_id' => (string) fake()->unique()->numberBetween(1, 9999999),
         ];
     }
 }

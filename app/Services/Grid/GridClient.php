@@ -7,7 +7,7 @@ use RuntimeException;
 
 class GridClient
 {
-    public function query(string $query, array $variables = []): array
+    public function query(string $query, array $variables = [], ?string $url = null): array
     {
         $response = Http::withHeaders([
             'x-api-key' => config('services.grid.key'),
@@ -15,7 +15,7 @@ class GridClient
         ])
             ->timeout(15)
             ->retry(2, 200)
-            ->post(config('services.grid.url'), [
+            ->post($url ?? config('services.grid.url'), [
                 'query' => $query,
                 'variables' => $variables,
             ]);

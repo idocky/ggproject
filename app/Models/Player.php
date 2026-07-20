@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['nickname', 'full_name', 'country', 'team_id'])]
+#[Fillable(['nickname', 'full_name', 'country', 'team_id', 'grid_id'])]
 class Player extends Model
 {
     /** @use HasFactory<PlayerFactory> */

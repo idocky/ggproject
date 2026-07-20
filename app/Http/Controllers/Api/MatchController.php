@@ -26,6 +26,11 @@ class MatchController extends Controller
         return response()->json($this->matchService->show($match));
     }
 
+    public function recentMatches(GameMatch $match): JsonResponse
+    {
+        return response()->json($this->matchService->recentMatches($match));
+    }
+
     public function create(Request $request): JsonResponse
     {
         $validated = $this->validateMatch($request);

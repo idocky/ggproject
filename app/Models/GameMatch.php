@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['team_a_id', 'team_b_id', 'date_time', 'tournament_id', 'format', 'html_url'])]
+#[Fillable(['team_a_id', 'team_b_id', 'date_time', 'tournament_id', 'format', 'html_url', 'grid_id'])]
 class GameMatch extends Model
 {
     /** @use HasFactory<GameMatchFactory> */
@@ -45,6 +45,11 @@ class GameMatch extends Model
 
     public function maps(): HasMany
     {
-        return $this->hasMany(Map::class, 'match_id');
+        return $this->hasMany(Map::class, 'match_id')->orderBy('pick');
+    }
+
+    public function tournament(): BelongsTo
+    {
+        return $this->belongsTo(Tournament::class);
     }
 }

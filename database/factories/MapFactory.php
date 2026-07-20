@@ -34,6 +34,7 @@ class MapFactory extends Factory
             ],
             'match_id' => GameMatch::factory(),
             'pick' => fake()->numberBetween(1, 5),
+            'winner_team_id' => null,
         ];
     }
 }

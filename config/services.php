@@ -37,7 +37,9 @@ return [
 
     'grid' => [
         'url' => env('GRID_URL'),
+        'series_state_url' => env('GRID_SERIES_STATE_URL'),
         'key' => env('GRID_API_KEY'),
+        'cs2_title_id' => env('GRID_CS2_TITLE_ID'),
     ]
 
 ];

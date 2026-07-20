@@ -32,6 +32,7 @@ class MapController extends Controller
             'score' => ['required', 'array'],
             'match_id' => ['required', 'integer', 'exists:matches,id'],
             'pick' => ['required', 'integer', 'min:1'],
+            'winner_team_id' => ['nullable', 'integer', 'exists:teams,id'],
         ]);
 
         return response()->json($this->mapService->create($validated), 201);
@@ -44,6 +45,7 @@ class MapController extends Controller
             'score' => ['sometimes', 'required', 'array'],
             'match_id' => ['sometimes', 'required', 'integer', 'exists:matches,id'],
             'pick' => ['sometimes', 'required', 'integer', 'min:1'],
+            'winner_team_id' => ['nullable', 'integer', 'exists:teams,id'],
         ]);
 
         return response()->json($this->mapService->update($map, $validated));

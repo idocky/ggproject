@@ -22,6 +22,7 @@ class TeamFactory extends Factory
             'country' => fake()->country(),
             'logo' => fake()->imageUrl(400, 400, 'sports', true, 'team'),
             'ranking' => fake()->optional()->numberBetween(1, 100),
+            'grid_id' => (string) fake()->unique()->numberBetween(1, 9999999),
         ];
     }
 }

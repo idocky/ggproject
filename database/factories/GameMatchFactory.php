@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\GameMatch;
 use App\Models\Team;
+use App\Models\Tournament;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,9 +23,10 @@ class GameMatchFactory extends Factory
             'team_a_id' => Team::factory(),
             'team_b_id' => Team::factory(),
             'date_time' => fake()->optional()->dateTimeBetween('-1 month', '+1 month'),
-            'tournament_id' => fake()->numberBetween(1, 5000),
+            'tournament_id' => Tournament::factory(),
             'format' => fake()->numberBetween(1, 5),
             'html_url' => fake()->optional()->url(),
+            'grid_id' => (string) fake()->unique()->numberBetween(1, 9999999),
         ];
     }
 }

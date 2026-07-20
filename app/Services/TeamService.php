@@ -3,19 +3,18 @@
 namespace App\Services;
 
 use App\Models\Team;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class TeamService
 {
-    /**
-     * @return Collection<int, Team>
-     */
-    public function index(): Collection
+    private const PER_PAGE = 24;
+
+    public function index(): LengthAwarePaginator
     {
         return Team::query()
             ->with('players')
             ->orderBy('name')
-            ->get();
+            ->paginate(self::PER_PAGE);
     }
 
     public function show(Team $team): Team

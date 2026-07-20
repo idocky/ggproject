@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'country', 'logo', 'ranking'])]
+#[Fillable(['name', 'country', 'logo', 'ranking', 'grid_id'])]
 class Team extends Model
 {
     /** @use HasFactory<TeamFactory> */
