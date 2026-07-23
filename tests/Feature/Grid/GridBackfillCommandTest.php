@@ -2,13 +2,16 @@
 
 namespace Tests\Feature\Grid;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\GameMatch;
+use App\Models\Team;
+use App\Models\Tournament;
 use Illuminate\Support\Facades\Http;
+use Tests\Concerns\InteractsWithMongo;
 use Tests\TestCase;
 
 class GridBackfillCommandTest extends TestCase
 {
-    use RefreshDatabase;
+    use InteractsWithMongo;
 
     public function test_it_backfills_series_for_the_given_range_and_exits_successfully(): void
     {
@@ -30,9 +33,9 @@ class GridBackfillCommandTest extends TestCase
         $this->artisan('grid:backfill', ['from' => '2026-01-01', 'to' => '2026-01-02'])
             ->assertExitCode(0);
 
-        $this->assertDatabaseCount('matches', 2);
-        $this->assertDatabaseCount('teams', 3);
-        $this->assertDatabaseCount('tournaments', 1);
+        $this->assertDatabaseCount(GameMatch::class, 2);
+        $this->assertDatabaseCount(Team::class, 3);
+        $this->assertDatabaseCount(Tournament::class, 1);
     }
 
     public function test_it_exits_with_failure_when_a_series_fails_to_map_but_still_persists_the_rest(): void
@@ -55,7 +58,7 @@ class GridBackfillCommandTest extends TestCase
         $this->artisan('grid:backfill', ['from' => '2026-01-01', 'to' => '2026-01-02'])
             ->assertExitCode(1);
 
-        $this->assertDatabaseCount('matches', 1);
+        $this->assertDatabaseCount(GameMatch::class, 1);
     }
 
     /**

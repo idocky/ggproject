@@ -19,6 +19,10 @@ RUN apt-get update && apt-get install -y \
 
 COPY ./_docker/app/php.ini /usr/local/etc/php/conf.d/php.ini
 
+ARG MONGODB_EXTENSION_VERSION=2.3.3
+RUN pecl install mongodb-${MONGODB_EXTENSION_VERSION} \
+    && docker-php-ext-enable mongodb
+
 RUN curl -sS https://getcomposer.org/installer | php -- \
     --filename=composer \
     --install-dir=/usr/local/bin

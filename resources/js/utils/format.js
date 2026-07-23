@@ -32,3 +32,14 @@ export function capitalize(value) {
 
     return value[0].toUpperCase() + value.slice(1);
 }
+
+const MATCH_STATUS_LABELS = {
+    planned: 'Запланирован',
+    ongoing: 'Идёт',
+    finished: 'Завершён',
+    cancelled: 'Отменён',
+};
+
+export function formatStatus(value) {
+    return MATCH_STATUS_LABELS[value] ?? 'Неизвестно';
+}

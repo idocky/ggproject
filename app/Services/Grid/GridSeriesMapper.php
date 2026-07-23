@@ -2,6 +2,7 @@
 
 namespace App\Services\Grid;
 
+use App\Enums\MatchStatus;
 use App\Models\GameMatch;
 use App\Models\Map;
 use App\Models\Player;
@@ -21,7 +22,7 @@ class GridSeriesMapper
      */
     public function map(array $seriesNode, array $games = [], array $rosters = []): GameMatch
     {
-        return DB::transaction(function () use ($seriesNode, $games, $rosters) {
+        return DB::connection('mongodb')->transaction(function () use ($seriesNode, $games, $rosters) {
             $tournament = Tournament::query()->updateOrCreate(
                 ['grid_id' => $seriesNode['tournament']['id']],
                 ['name' => $seriesNode['tournament']['name']],
@@ -32,14 +33,17 @@ class GridSeriesMapper
             $teamA = $this->upsertTeam($teamANode['baseInfo'], $rosters[$teamANode['baseInfo']['id']] ?? []);
             $teamB = $this->upsertTeam($teamBNode['baseInfo'], $rosters[$teamBNode['baseInfo']['id']] ?? []);
 
+            $format = $this->parseFormat($seriesNode['format']['nameShortened'] ?? null);
+
             $match = GameMatch::query()->updateOrCreate(
                 ['grid_id' => $seriesNode['id']],
                 [
-                    'team_a_id' => $teamA->id,
-                    'team_b_id' => $teamB->id,
+                    'team_a' => $teamA->toSnapshot(),
+                    'team_b' => $teamB->toSnapshot(),
                     'date_time' => $seriesNode['startTimeScheduled'] ?? null,
-                    'tournament_id' => $tournament->id,
-                    'format' => $this->parseFormat($seriesNode['format']['nameShortened'] ?? null),
+                    'tournament' => $tournament->toSnapshot(),
+                    'format' => $format,
+                    'status' => $this->determineStatus($games, $format, $teamA, $teamB)->value,
                 ],
             );
 
@@ -76,12 +80,12 @@ class GridSeriesMapper
 
     /**
      * @param  array<int, array>  $gameTeams
-     * @return array{score: array{team_a: int, team_b: int}, winner_team_id: int|null}
+     * @return array{score: array{team_a: int, team_b: int}, winner_team: array|null}
      */
     private function buildMapResult(array $gameTeams, Team $teamA, Team $teamB): array
     {
         $score = ['team_a' => 0, 'team_b' => 0];
-        $winnerTeamId = null;
+        $winnerTeam = null;
 
         foreach ($gameTeams as $gameTeam) {
             $teamId = $gameTeam['id'] ?? null;
@@ -99,11 +103,11 @@ class GridSeriesMapper
             $score[$team->is($teamA) ? 'team_a' : 'team_b'] = $teamScore;
 
             if ($gameTeam['won'] ?? false) {
-                $winnerTeamId = $team->id;
+                $winnerTeam = $team->toSnapshot();
             }
         }
 
-        return ['score' => $score, 'winner_team_id' => $winnerTeamId];
+        return ['score' => $score, 'winner_team' => $winnerTeam];
     }
 
     /**
@@ -146,5 +150,50 @@ class GridSeriesMapper
         }
 
         return (int) $matches[1];
+    }
+
+    /**
+     * GRID doesn't expose a series-level status, so it's derived from the map
+     * results: no finished games means the series hasn't started, and a team
+     * reaching the number of wins required by the format means it's over.
+     * GRID also has no cancellation signal, so `cancelled` is never inferred
+     * here — it can only be set through the API.
+     *
+     * @param  array<int, array>  $games
+     */
+    private function determineStatus(array $games, ?int $format, Team $teamA, Team $teamB): MatchStatus
+    {
+        $finishedGames = array_filter($games, fn (array $game) => ($game['finished'] ?? false) === true);
+
+        if ($finishedGames === []) {
+            return MatchStatus::Planned;
+        }
+
+        $winsNeeded = $format !== null ? (int) ceil($format / 2) : null;
+        $wins = ['team_a' => 0, 'team_b' => 0];
+
+        foreach ($finishedGames as $game) {
+            foreach ($game['teams'] ?? [] as $gameTeam) {
+                if (! ($gameTeam['won'] ?? false)) {
+                    continue;
+                }
+
+                $team = match ($gameTeam['id'] ?? null) {
+                    $teamA->grid_id => 'team_a',
+                    $teamB->grid_id => 'team_b',
+                    default => null,
+                };
+
+                if ($team !== null) {
+                    $wins[$team]++;
+                }
+            }
+        }
+
+        if ($winsNeeded !== null && ($wins['team_a'] >= $winsNeeded || $wins['team_b'] >= $winsNeeded)) {
+            return MatchStatus::Finished;
+        }
+
+        return MatchStatus::Ongoing;
     }
 }

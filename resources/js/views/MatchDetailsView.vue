@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useFetch } from '../composables/useApi';
-import { capitalize, formatDateTime, formatFormat, initials } from '../utils/format';
+import { capitalize, formatDateTime, formatFormat, formatStatus, initials } from '../utils/format';
 import TeamRecentMatches from '../components/TeamRecentMatches.vue';
 
 const props = defineProps({
@@ -11,12 +11,23 @@ const props = defineProps({
 const { data: match, loading, error, reload } = useFetch(`/api/matches/${props.id}`);
 const { data: recentMatches, loading: recentLoading } = useFetch(`/api/matches/${props.id}/recent-matches`);
 
+const STATUS_BADGE_CLASSES = {
+    planned: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300',
+    ongoing: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400',
+    finished: 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300',
+    cancelled: 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400',
+};
+
+const statusBadgeClass = computed(
+    () => STATUS_BADGE_CLASSES[match.value?.status] ?? STATUS_BADGE_CLASSES.planned,
+);
+
 const seriesScore = computed(() => {
     const maps = match.value?.maps ?? [];
 
     return {
-        teamA: maps.filter((m) => m.winner_team_id === match.value.team_a.id).length,
-        teamB: maps.filter((m) => m.winner_team_id === match.value.team_b.id).length,
+        teamA: maps.filter((m) => m.winner_team?.id === match.value.team_a.id).length,
+        teamB: maps.filter((m) => m.winner_team?.id === match.value.team_b.id).length,
     };
 });
 </script>
@@ -60,6 +71,9 @@ const seriesScore = computed(() => {
                             {{ match.tournament?.name ?? 'Без турнира' }}
                         </span>
                         <div class="flex items-center gap-2">
+                            <span class="rounded-full px-2.5 py-1 font-medium" :class="statusBadgeClass">
+                                {{ formatStatus(match.status) }}
+                            </span>
                             <span class="rounded-full bg-neutral-100 px-2.5 py-1 font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
                                 {{ formatFormat(match.format) }}
                             </span>
@@ -177,7 +191,7 @@ const seriesScore = computed(() => {
                                 <span
                                     class="font-semibold"
                                     :class="
-                                        gameMap.winner_team_id === match.team_a.id
+                                        gameMap.winner_team?.id === match.team_a.id
                                             ? 'text-neutral-900 dark:text-neutral-100'
                                             : 'text-neutral-400 dark:text-neutral-500'
                                     "
@@ -188,7 +202,7 @@ const seriesScore = computed(() => {
                                 <span
                                     class="font-semibold"
                                     :class="
-                                        gameMap.winner_team_id === match.team_b.id
+                                        gameMap.winner_team?.id === match.team_b.id
                                             ? 'text-neutral-900 dark:text-neutral-100'
                                             : 'text-neutral-400 dark:text-neutral-500'
                                     "

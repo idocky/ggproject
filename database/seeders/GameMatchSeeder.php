@@ -13,19 +13,19 @@ class GameMatchSeeder extends Seeder
      */
     public function run(): void
     {
-        $teams = Team::query()->pluck('id');
+        $teams = Team::all();
 
         if ($teams->count() < 2) {
             Team::factory(2)->create();
-            $teams = Team::query()->pluck('id');
+            $teams = Team::all();
         }
 
         foreach (range(1, 12) as $index) {
             [$teamA, $teamB] = $teams->random(2)->values()->all();
 
             GameMatch::factory()->create([
-                'team_a_id' => $teamA,
-                'team_b_id' => $teamB,
+                'team_a' => $teamA->toSnapshot(),
+                'team_b' => $teamB->toSnapshot(),
             ]);
         }
     }

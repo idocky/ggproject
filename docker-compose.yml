@@ -20,6 +20,7 @@ services:
             - ./:/var/www
         depends_on:
             - postgres
+            - mongodb_init
         container_name: gg_app
 
     postgres:
@@ -40,6 +41,33 @@ services:
             POSTGRES_PASSWORD: secret
             POSTGRES_USER: test_user
             POSTGRES_DB: test_db
+    mongodb:
+        image: mongo:latest
+        container_name: laravel-mongodb
+        command: ["--replSet", "rs0", "--bind_ip_all"]
+        restart: always
+        ports:
+            - "27017:27017"
+        environment:
+            MONGO_INITDB_DATABASE: laravel
+        volumes:
+            - mongo_data_main:/data/db
+        healthcheck:
+            test: mongosh --quiet --eval 'db.runCommand("ping").ok' || exit 1
+            interval: 5s
+            timeout: 5s
+            retries: 10
+
+    mongodb_init:
+        image: mongo:latest
+        container_name: laravel-mongodb-init
+        depends_on:
+            mongodb:
+                condition: service_healthy
+        restart: "no"
+        entrypoint: >
+            mongosh --host mongodb --quiet --eval
+            "try { rs.status(); } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] }); }"
     redis:
         image: redis:latest
         restart: always
@@ -47,3 +75,6 @@ services:
             - ./storage/redis/data:/data
         ports:
             - "10004:6379"
+
+volumes:
+    mongo_data_main:

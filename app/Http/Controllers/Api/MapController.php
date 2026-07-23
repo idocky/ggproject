@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\GameMatch;
 use App\Models\Map;
+use App\Models\Team;
+use App\Rules\MongoExists;
 use App\Services\MapService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -30,9 +33,9 @@ class MapController extends Controller
         $validated = $request->validate([
             'map' => ['required', 'string', 'max:255'],
             'score' => ['required', 'array'],
-            'match_id' => ['required', 'integer', 'exists:matches,id'],
+            'match_id' => ['required', 'string', new MongoExists(GameMatch::class)],
             'pick' => ['required', 'integer', 'min:1'],
-            'winner_team_id' => ['nullable', 'integer', 'exists:teams,id'],
+            'winner_team_id' => ['nullable', 'string', new MongoExists(Team::class)],
         ]);
 
         return response()->json($this->mapService->create($validated), 201);
@@ -43,9 +46,9 @@ class MapController extends Controller
         $validated = $request->validate([
             'map' => ['sometimes', 'required', 'string', 'max:255'],
             'score' => ['sometimes', 'required', 'array'],
-            'match_id' => ['sometimes', 'required', 'integer', 'exists:matches,id'],
+            'match_id' => ['sometimes', 'required', 'string', new MongoExists(GameMatch::class)],
             'pick' => ['sometimes', 'required', 'integer', 'min:1'],
-            'winner_team_id' => ['nullable', 'integer', 'exists:teams,id'],
+            'winner_team_id' => ['nullable', 'string', new MongoExists(Team::class)],
         ]);
 
         return response()->json($this->mapService->update($map, $validated));

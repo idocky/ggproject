@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\MatchStatus;
 use App\Http\Controllers\Controller;
 use App\Models\GameMatch;
+use App\Models\Team;
+use App\Rules\MongoExists;
 use App\Services\MatchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Enum;
 
 class MatchController extends Controller
 {
@@ -51,21 +55,22 @@ class MatchController extends Controller
     private function validateMatch(Request $request, ?GameMatch $match = null): array
     {
         $rules = [
-            'team_a_id' => [$match ? 'sometimes' : 'required', 'required', 'integer', 'exists:teams,id'],
-            'team_b_id' => [$match ? 'sometimes' : 'required', 'required', 'integer', 'exists:teams,id'],
+            'team_a_id' => [$match ? 'sometimes' : 'required', 'required', 'string', new MongoExists(Team::class)],
+            'team_b_id' => [$match ? 'sometimes' : 'required', 'required', 'string', new MongoExists(Team::class)],
             'date_time' => ['nullable', 'date'],
-            'tournament_id' => [$match ? 'sometimes' : 'required', 'required', 'integer', 'min:1'],
+            'tournament_id' => [$match ? 'sometimes' : 'required', 'required', 'string'],
             'format' => [$match ? 'sometimes' : 'required', 'required', 'integer', 'min:1'],
             'html_url' => ['nullable', 'url', 'max:2048'],
+            'status' => ['sometimes', 'nullable', new Enum(MatchStatus::class)],
         ];
 
         $validator = Validator::make($request->all(), $rules);
 
         $validator->after(function ($validator) use ($request, $match): void {
-            $teamA = $request->input('team_a_id', $match?->team_a_id);
-            $teamB = $request->input('team_b_id', $match?->team_b_id);
+            $teamA = $request->input('team_a_id', $match?->team_a['id'] ?? null);
+            $teamB = $request->input('team_b_id', $match?->team_b['id'] ?? null);
 
-            if ($teamA !== null && $teamB !== null && (int) $teamA === (int) $teamB) {
+            if ($teamA !== null && $teamB !== null && (string) $teamA === (string) $teamB) {
                 $validator->errors()->add('team_b_id', 'The team_b_id field must be different from team_a_id.');
             }
         });

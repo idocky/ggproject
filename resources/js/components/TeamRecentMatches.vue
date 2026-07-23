@@ -16,8 +16,8 @@ function score(match) {
 
     if ((match.format ?? 1) >= 2) {
         return {
-            for: maps.filter((m) => m.winner_team_id === props.team.id).length,
-            against: maps.filter((m) => m.winner_team_id && m.winner_team_id !== props.team.id).length,
+            for: maps.filter((m) => m.winner_team?.id === props.team.id).length,
+            against: maps.filter((m) => m.winner_team?.id && m.winner_team.id !== props.team.id).length,
         };
     }
 

@@ -20,10 +20,10 @@ class GameMatchFactory extends Factory
     public function definition(): array
     {
         return [
-            'team_a_id' => Team::factory(),
-            'team_b_id' => Team::factory(),
+            'team_a' => fn () => Team::factory()->create()->toSnapshot(),
+            'team_b' => fn () => Team::factory()->create()->toSnapshot(),
             'date_time' => fake()->optional()->dateTimeBetween('-1 month', '+1 month'),
-            'tournament_id' => Tournament::factory(),
+            'tournament' => fn () => Tournament::factory()->create()->toSnapshot(),
             'format' => fake()->numberBetween(1, 5),
             'html_url' => fake()->optional()->url(),
             'grid_id' => (string) fake()->unique()->numberBetween(1, 9999999),

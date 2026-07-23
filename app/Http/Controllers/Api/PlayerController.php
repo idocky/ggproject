@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Player;
+use App\Models\Team;
+use App\Rules\MongoExists;
 use App\Services\PlayerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,7 +33,7 @@ class PlayerController extends Controller
             'nickname' => ['required', 'string', 'max:255'],
             'full_name' => ['required', 'string', 'max:255'],
             'country' => ['required', 'string', 'max:255'],
-            'team_id' => ['required', 'integer', 'exists:teams,id'],
+            'team_id' => ['required', 'string', new MongoExists(Team::class)],
         ]);
 
         return response()->json($this->playerService->create($validated), 201);
@@ -43,7 +45,7 @@ class PlayerController extends Controller
             'nickname' => ['sometimes', 'required', 'string', 'max:255'],
             'full_name' => ['sometimes', 'required', 'string', 'max:255'],
             'country' => ['sometimes', 'required', 'string', 'max:255'],
-            'team_id' => ['sometimes', 'required', 'integer', 'exists:teams,id'],
+            'team_id' => ['sometimes', 'required', 'string', new MongoExists(Team::class)],
         ]);
 
         return response()->json($this->playerService->update($player, $validated));

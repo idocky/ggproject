@@ -2,20 +2,26 @@
 
 namespace App\Models;
 
+use App\Enums\MatchStatus;
 use Database\Factories\GameMatchFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use MongoDB\Laravel\Eloquent\Model;
 
-#[Fillable(['team_a_id', 'team_b_id', 'date_time', 'tournament_id', 'format', 'html_url', 'grid_id'])]
+#[Fillable(['team_a', 'team_b', 'date_time', 'tournament', 'format', 'html_url', 'grid_id', 'status'])]
 class GameMatch extends Model
 {
     /** @use HasFactory<GameMatchFactory> */
     use HasFactory;
 
+    protected $connection = 'mongodb';
+
     protected $table = 'matches';
+
+    protected $attributes = [
+        'status' => MatchStatus::Planned->value,
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -26,30 +32,20 @@ class GameMatch extends Model
     {
         return [
             'date_time' => 'datetime',
-            'team_a_id' => 'integer',
-            'team_b_id' => 'integer',
-            'tournament_id' => 'integer',
             'format' => 'integer',
+            'status' => MatchStatus::class,
         ];
     }
 
-    public function teamA(): BelongsTo
+    protected static function booted(): void
     {
-        return $this->belongsTo(Team::class, 'team_a_id');
-    }
-
-    public function teamB(): BelongsTo
-    {
-        return $this->belongsTo(Team::class, 'team_b_id');
+        static::deleting(function (GameMatch $match): void {
+            $match->maps()->delete();
+        });
     }
 
     public function maps(): HasMany
     {
         return $this->hasMany(Map::class, 'match_id')->orderBy('pick');
-    }
-
-    public function tournament(): BelongsTo
-    {
-        return $this->belongsTo(Tournament::class);
     }
 }
